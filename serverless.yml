@@ -1,5 +1,5 @@
 service: thumbnail-api
-# app and org for use with dashboard.serverless.com
+
 app: thumbnail-api
 org: skaznowiecki
 
@@ -12,17 +12,9 @@ provider:
     BUCKET: ${file(./.env.yml):BUCKET}
     BASE_PATH: ${file(./.env.yml):BASE_PATH}
     REGION: ${file(./.env.yml):REGION}
-    ACCESS_KEY: ${file(./.env.yml):ACCESS_KEY}
-    SECRET_KEY: ${file(./.env.yml):SECRET_KEY}
+    ACCESS_KEY: ${env:ACCESS_KEY}
+    SECRET_KEY: ${env:SECRET_KEY}
     
-outputs:
-  custom-output: any-value-here
-
-
-# Add the serverless-webpack plugin
-#plugins:
-#  - serverless-webpack
-
 functions:
   store:
     handler: handlers/api.store
@@ -31,6 +23,10 @@ functions:
           path: thumbs
           method: post
           cors: true
+          authorizer: 
+            type: COGNITO_USER_POOLS
+            authorizerId: 
+              Ref: ApiAuthorizer
     environment:
       MAX_SIZE: ${file(./.env.yml):MAX_SIZE}
       ALLOW_FORMATS: ${file(./.env.yml):ALLOW_FORMATS}
@@ -41,10 +37,15 @@ functions:
           path: thumbs/{id}
           method: get
           cors: true
+          authorizer: 
+            type: COGNITO_USER_POOLS
+            authorizerId: 
+              Ref: ApiAuthorizer
           request: 
             parameters:
                paths: 
                  id: true
+          
   resize:
     handler: handlers/process.resize
     events:
@@ -54,3 +55,51 @@ functions:
           rules:
             - prefix: uploads/
           existing: true
+
+resources:
+  Resources:
+    ApiAuthorizer: 
+      Type: AWS::ApiGateway::Authorizer
+      Properties: 
+        Name: AuthUserPool
+        Type: COGNITO_USER_POOLS
+        IdentitySource: method.request.header.Authorization
+        RestApiId: 
+          Ref: ApiGatewayRestApi
+        ProviderARNs: 
+          - Fn::GetAtt:
+              - UserPool
+              - Arn
+    UserPool:
+      Type: AWS::Cognito::UserPool
+      Properties:
+        UserPoolName: ${opt:stage,'dev'}-sinapsis-user-pool
+
+    S3Bucket:
+      Type: AWS::S3::Bucket
+      Properties:
+        BucketName: ${file(./.env.yml):BUCKET}
+        AccessControl: PublicReadWrite
+        CorsConfiguration:
+          CorsRules:
+          - AllowedOrigins:
+            - '*'
+            AllowedHeaders:
+            - '*'
+            AllowedMethods:
+            - GET
+            - HEAD
+    S3BucketPolicy:
+      Type: AWS::S3::BucketPolicy
+      Properties:
+        Bucket:
+          Ref: S3Bucket
+        PolicyDocument:
+          Statement:
+            -
+              Action:
+                - s3:GetObject
+              Effect: Allow
+              Resource:
+                Fn::Join: ['', [Fn::GetAtt: [ S3Bucket, Arn ], '/*'] ]
+              Principal: "*"
