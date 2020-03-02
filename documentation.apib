@@ -1,0 +1,87 @@
+FORMAT: 1A
+HOST: https://polls.apiblueprint.org/
+
+# Thumbnail generator
+
+It's a simple api to generate diferent sizes of thumbnails from a valid image. 
+
+## Thumbnail [/thumbs]
+
+### Show thumbnail [GET /thumbs/{id}]
+
++ Parameters
+
+    + id: `FOM7lmaExIr27WxbZT` (string) - Id of thumbnail    
+
++ Response 200 (application/json)
+
+    + Attributes (Thumb Collection Response)
+
+
+
+### Create a thumbnail [POST]
+
++ Request (application/json)
+
+    + Attributes (Thumb Request)
+
++ Response 200 (application/json)
+
+    + Attributes (Thumb Model)
+
++ Response 422 (application/json)
+
+    + Attributes (Wrong image exception)
+
++ Request (application/json)
+
+        + image: `base64img` (string) - If you send an image larger than 5 mb
+
++ Response 422 (application/json)
+
+    + Attributes (Maximun size exception)
+
++ Request (application/json)
+
+
++ Response 422 (application/json)
+
+    + Attributes (Required image exception)
+
++ Request (application/json)
+
+        + image: `base64img` (string) - If you send an image that is not jpeg or png
+
++ Response 422 (application/json)
+
+    + Attributes (Invalid format exception)
+
+
+
+
+## Data structures
+
+## Thumb Request
++ image: `base64image` (string, required) - Base64 image
+
+## Thumb Model
++ id: `FOM7lmaExIr27WxbZT` (string) - Thumbnail id
+
+## Thumb Collection Response
++ files(array)
+    - `https://s3:thumbnails/thumbs/FOM7lmaExIr27WxbZT/120x120.png`
+    - `https://s3:thumbnails/thumbs/FOM7lmaExIr27WxbZT/160x120.png`
+    - `https://s3:thumbnails/thumbs/FOM7lmaExIr27WxbZT/400x300.png`
+
+
+## Required image exception
++ message: `Image key is required
+
+## Wrong image exception
++ message: `Invalid image
+
+## Maximun size exception
++ message: `Image size should be 5 MB or less`
+
+## Invalid format exception
++ message: `Image should be [png,jpeg]`
