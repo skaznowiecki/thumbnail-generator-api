@@ -15,6 +15,10 @@ For the solution of the challenge, I have implemented three lambdas with two end
 - For Api endpoint -> **Lambda** with **ApiGateway**
 - For Storage -> **S3**
 
+### Documentation 
+For documentation I use `Blueprint` specification deployed [here](https://thumbnailgenerator.docs.apiary.io/)
+
+
 ### Set up
 You may configure the folowing enviroment vars 
 ```
